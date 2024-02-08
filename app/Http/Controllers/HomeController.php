@@ -25,7 +25,8 @@ class HomeController extends Controller
     {
         if (auth()->user()) {
             $cart = auth()->user()->cart;
-            $cartProducts = json_decode($cart->products, true);
+            if ($cart)
+                $cartProducts = json_decode($cart->products, true);
         }
 
         return view('index', [

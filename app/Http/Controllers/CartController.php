@@ -24,8 +24,7 @@ class CartController extends Controller
         if ($cart) {
             $cartProducts = json_decode($cart->products, true);
             $products = Product::whereIn('id', array_keys($cartProducts))->get();
-            if (auth()->user()->bonuses > 0)
-                $cartSummary = CartService::getCartSummary(auth()->user(), $products, $cartProducts);
+            $cartSummary = CartService::getCartSummary(auth()->user(), $products, $cartProducts);
         }
 
         return view('cart', [

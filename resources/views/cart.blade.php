@@ -49,7 +49,7 @@
                     <p class="fs-4">Общая сумма заказа:</p>
                     <p class="fw-bold">{{ isset($cartSummary['total']) ? number_format($cartSummary['total'], 0, '.', ' '): 0 }}
                         ₽</p>
-                    @if($cartSummary)
+                    @if($cartSummary && isset($cartSummary['total_discount_percent']))
                         <p class="fs-4">Общая сумма заказа c учётом скидки <span>{{ isset($cartSummary['total_discount_percent']) ? number_format($cartSummary['total_discount_percent'], 0, '.', ' '): 0 }}%</span>:
                         </p>
                         <p class="fw-bold">{{ isset($cartSummary['total_with_discount']) ? number_format($cartSummary['total_with_discount'], 0, '.', ' '): 0 }}
