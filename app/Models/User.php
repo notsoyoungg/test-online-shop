@@ -6,8 +6,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
 
+/**
+ * @property integer $id
+ * @property string $name
+ * @property string $email
+ * @property integer $bonuses
+ * @property Carbon|null $email_verified_at
+ * @property string $password
+ * @property string $remember_token
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -42,6 +54,9 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
     public function cart() {
         return $this->hasOne(Cart::class);
     }

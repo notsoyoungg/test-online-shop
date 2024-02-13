@@ -18,55 +18,71 @@ class CartController extends Controller
     {
         $this->middleware('auth');
     }
+
+    /**
+     * Отображение корзины пользователя
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application
+     */
     public function show()
     {
         $cart = auth()->user()->cart;
         if ($cart) {
-            $cartProducts = json_decode($cart->products, true);
-            $products = Product::whereIn('id', array_keys($cartProducts))->get();
-            $cartSummary = CartService::getCartSummary(auth()->user(), $products, $cartProducts);
+            // Получаем коллекцию товаров, которые есть в корзине пользователя
+            $products = Product::whereIn('id', array_keys($cart->products->toArray()))->get();
+            // Получаем дополнительную информацию о корзине, такую как общую стоимоть, процент скидки и т.д.
+            $cartSummary = CartService::getCartSummary(auth()->user(), $products, $cart->products);
         }
 
         return view('cart', [
-            'cartProducts' => $cartProducts ?? null,
+            'cartProducts' => $cart?->products,
             'products'     => $products ?? null,
             'cartSummary'  => $cartSummary ?? null,
         ]);
     }
 
+    /**
+     * Добавление товара в корзину
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function addProduct(Request $request)
     {
         $cart = Cart::whereUserId(auth()->user()->id)->first();
-        if (!$cart)
-            $cart = Cart::create([
-                'user_id'  => auth()->user()->id,
-                'products' => json_encode([]),
-             ]);
 
-        if ($cart) {
-            $productsArray = json_decode($cart->products, true);
-            if (isset($productsArray[$request->product_id]))
-                $productsArray[$request->product_id] += 1;
-            else
-                $productsArray[$request->product_id] = 1;
+        // Если корзина не найдена, то создаем ее.
+        $cart ??= Cart::create([
+            'user_id'  => auth()->user()->id,
+            'products' => [],
+        ]);
 
-            $cart->products = json_encode($productsArray);
-            $cart->save();
+        // Если в корзине уже есть товар с указанным id, то увеличиваем его количество в корзине на 1
+        // если товара в коризне нет, то добавляем его в количестве 1
+        if (isset($cart->products[$request->product_id])) {
+            $cart->products[$request->product_id] += 1;
+        } else {
+            $cart->products[$request->product_id] = 1;
         }
+        $cart->save();
         return redirect()->back();
     }
 
+    /**
+     * Удаление товара из корзины
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function removeProduct(Request $request)
     {
         $cart = Cart::whereUserId(auth()->user()->id)->first();
         if ($cart) {
-            $productsArray = json_decode($cart->products, true);
-            if (isset($productsArray[$request->product_id])) {
-                $productsArray[$request->product_id] -= 1;
-                if ($productsArray[$request->product_id] <= 0)
-                    unset($productsArray[$request->product_id]);
+            // Если в корзине есть товар с указанным id, то уменьшаем его количество на 1
+            if (isset($cart->products[$request->product_id])) {
+                $cart->products[$request->product_id] -= 1;
+                // Если после уменьшения количество товара равняется нулю или меньше, то удаляем товар из корзины
+                if ($cart->products[$request->product_id] <= 0) {
+                    unset($cart->products[$request->product_id]);
+                }
             }
-            $cart->products = json_encode($productsArray);
             $cart->save();
         }
         return redirect()->back();

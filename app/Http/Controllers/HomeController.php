@@ -23,10 +23,9 @@ class HomeController extends Controller
      */
     public function index()
     {
+        // Если есть аутентифицированный пользователь, то пытаемся получить данные о товарах в корзине.
         if (auth()->user()) {
-            $cart = auth()->user()->cart;
-            if ($cart)
-                $cartProducts = json_decode($cart->products, true);
+            $cartProducts = auth()->user()->cart?->products;
         }
 
         return view('index', [
